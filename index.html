@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="pt_BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AudioGrid</title>
+    <style>
+        /* CSS para botões */
+        button {
+            background-color: #3498db; /* Cor de fundo padrão */
+            color: #ffffff; /* Cor do texto padrão */
+            padding: 0 0;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 14px;
+            overflow: hidden;
+            transition: background-color 0.1s, color 0.1s; /* Transição de cor de fundo e texto */
+            line-break: anywhere;
+        }
+
+        /* Efeito de hover */
+        button:hover {
+            background-color: #2980b9 !important; /* Nova cor de fundo no hover */
+            color: #f2f2f2 !important; /* Nova cor do texto no hover */
+        }
+    </style>
+</head>
+<body style="background-color: #000000">
+<div id="button-area"></div>
+<script>
+
+    // a polyfill for it would be:
+    AbortSignal.timeout ??= function timeout(ms) {
+        const ctrl = new AbortController()
+        setTimeout(() => ctrl.abort(), ms)
+        return ctrl.signal
+    }
+
+
+    const buttonArea = document.getElementById('button-area');
+
+    // Fazer a requisição GET para obter a lista de nomes de áudio
+    fetch('http://localhost:3000/getAudioNames', { signal: AbortSignal.timeout(5000) })
+    //fetch('http://localhost:3000/getAudioNames')
+        .then(response => response.json())
+        .then(data => {
+
+            // Criar botões com base nos dados de atalho
+            data.audioFiles.forEach(audioFile => {
+
+                const color = audioFile.duration < 5 ? '#FF66B2' : '#3498db';
+
+                const button = document.createElement('button');
+                button.textContent = audioFile.name.replace(/\.[^/.]+$/, '').substring(0, 22);
+                button.style.color = '#000000';
+                button.style.backgroundColor = color;
+                button.style.margin = '2px';
+                button.style.padding = '0px';
+                button.style.border = 'none';
+                button.style.cursor = 'pointer';
+                button.style.width = '170px';
+                button.style.height = '90px';
+
+                // Adicionar um evento de clique ao botão
+                button.addEventListener('click', () => {
+                    // Fazer a requisição POST para reproduzir o áudio
+                    fetch('http://localhost:3000/playAudio', {
+                        signal: AbortSignal.timeout(5000),
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            name: audioFile.name,
+                        }),
+                    })
+                        .then(response => response.json())
+                        .then(result => {
+                        })
+                        .catch(error => {
+                            console.error('Erro ao reproduzir áudio:', error);
+                        });
+                });
+
+                buttonArea.appendChild(button);
+            });
+        })
+        .catch(error => {
+            console.error('Erro ao obter nomes de áudio:', error);
+        });
+</script>
+</body>
+</html>
