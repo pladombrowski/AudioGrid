@@ -11,7 +11,8 @@ Instale o vlc: http://www.videolan.org/vlc/
 
 O executável do vlc deve estar disponível no terminal/cmd
 
-Baixe o binário do AudioGrid de acordo com o seu sistema operacional
+Baixe o binário do AudioGrid de acordo com o seu sistema operacional:
+https://github.com/pladombrowski/AudioGrid/releases
 
 Só executar o arquivo AudioGrid
 
