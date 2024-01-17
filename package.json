@@ -3,7 +3,7 @@
   "name": "audio-grid",
   "version": "1.0.0",
   "author": "Dambraw",
-  "main": "index.mjs",
+  "main": "index.js",
   "dependencies": {
     "@ffprobe-installer/ffprobe": "^2.1.2",
     "audic": "^3.0.2",
@@ -23,9 +23,9 @@
     "unique-string": "^3.0.0"
   },
   "devDependencies": {
-    "electron": "^28.1.1"
+    "electron": "29.0.0-alpha.1"
   },
   "scripts": {
-    "start": "electron index.mjs"
+    "start": "electron index.js"
   }
 }
