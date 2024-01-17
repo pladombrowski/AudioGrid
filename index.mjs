@@ -1,4 +1,4 @@
-import {app, BrowserWindow, globalShortcut, Menu, ipcMain, shell} from 'electron'
+import {app, BrowserWindow, globalShortcut, Menu, shell} from 'electron'
 import path from 'path'
 import ip from 'ip';
 import fs from 'fs';
@@ -14,10 +14,8 @@ import cors from 'cors';
 import {getAudioDurationInSeconds} from 'get-audio-duration';
 import {fileURLToPath} from 'url';
 
-
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-//const language = app.getLocale();
 const i18nPath = path.join(__dirname, 'i18n.properties');
 const expressApp = express();
 const port = 3000;
@@ -81,7 +79,7 @@ async function playAudio(name, res) {
             return res.status(400).json({error: 'O parâmetro "name" é obrigatório.'});
         }
         console.log("Directory name: " + __dirname);
-        const audioPath = path.join(__dirname, 'src/audios', name);
+        const audioPath = path.join(__dirname, 'audios', name);
         console.log(audioPath);
         if (!fs.existsSync(audioPath)) {
             return res.status(404).json({error: 'Arquivo de áudio não encontrado.'});
@@ -90,7 +88,7 @@ async function playAudio(name, res) {
         console.log('Stoping audio...');
 
         try {
-            vlc.command('pl_stop').then(value => {
+            vlc.command('pl_stop').then(() => {
                 console.log('Playing new audio...');
                 // Play audio
                 vlc.command('in_play', {
@@ -110,7 +108,7 @@ async function playAudio(name, res) {
 
 function getAudioNames(res) {
     try {
-        const audioFolder = path.join(__dirname, 'src/audios');
+        const audioFolder = path.join(__dirname, 'audios');
         console.log("audio folder: " + audioFolder);
         fs.readdir(audioFolder, async (err, files) => {
             if (err) {
@@ -235,12 +233,12 @@ function createWindow() {
                 label: i18nTexts.open_audios_folder,
                 click: () => {
                     if (platform === 'win32') {
-                        const audiosFolder = path.join(__dirname, 'src/audios/p');
+                        const audiosFolder = path.join(__dirname, 'audios/p');
                         mainWindow.hide();
                         shell.showItemInFolder(audiosFolder);
                     }
                     if (platform === 'linux') {
-                        const audiosFolder = path.join(__dirname, 'src/audios/p/e');
+                        const audiosFolder = path.join(__dirname, 'audios/p/e');
                         mainWindow.hide();
                         shell.showItemInFolder(audiosFolder);
                     }
@@ -262,7 +260,7 @@ function createWindow() {
         ];
 
         const contextMenuInstance = Menu.buildFromTemplate(contextMenuTemplate);
-        mainWindow.webContents.on('context-menu', (e, props) => {
+        mainWindow.webContents.on('context-menu', () => {
             contextMenuInstance.popup({window: mainWindow});
         });
     } catch (err) {
