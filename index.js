@@ -101,7 +101,7 @@ async function playAudio(name, res) {
             });
         }
     } catch (err) {
-        console.log("playAudio esception: ");
+        console.log("playAudio escxeption: ");
         console.log(err);
     }
 }
@@ -131,7 +131,7 @@ function getAudioNames(res) {
         });
         console.log("after reading folder!");
     } catch (err) {
-        console.log("getAudioNames esception: ");
+        console.log("getAudioNames escxeption: ");
         console.log(err);
     }
 }
@@ -161,7 +161,7 @@ function parseProperties(propertiesString) {
         });
         return properties;
     } catch (err) {
-        console.log("parseProperties esception: ");
+        console.log("parseProperties escxeption: ");
         console.log(err);
     }
 }
@@ -184,7 +184,7 @@ function startServer() {
             console.log(`Servidor escutando em http://${localIP}:${port}`);
         });
     } catch (err) {
-        console.log("startServer esception: ");
+        console.log("startServer escxeption: ");
         console.log(err);
     }
 }
@@ -252,19 +252,61 @@ function createWindow() {
             },
             {type: 'separator'},
             {
+                label: i18nTexts.help,
+                submenu: [
+                    {
+                        label: i18nTexts.help_zoom
+                    },
+                    {
+                        label: i18nTexts.help_show_hide
+                    },
+                    {
+                        label: i18nTexts.help_web_interface
+                    }
+                ]
+            },
+            {type: 'separator'},
+            {
                 label: i18nTexts.exit,
                 click: () => {
                     app.quit();
                 },
             },
+
         ];
 
         const contextMenuInstance = Menu.buildFromTemplate(contextMenuTemplate);
         mainWindow.webContents.on('context-menu', () => {
             contextMenuInstance.popup({window: mainWindow});
         });
+
+        mainWindow.webContents.setZoomFactor(1.0);
+
+        mainWindow.webContents
+            .setVisualZoomLevelLimits(1, 5)
+            .catch((err) => console.log(err));
+
+        mainWindow.webContents.on("zoom-changed", (event, zoomDirection) => {
+            console.log(zoomDirection);
+            const currentZoom = mainWindow.webContents.getZoomFactor();
+            console.log("Current Zoom Factor - ", currentZoom);
+            console.log("Current Zoom Level at - ", mainWindow.webContents.zoomLevel);
+
+            if (zoomDirection === "in") {
+                mainWindow.webContents.zoomFactor = currentZoom + 0.01;
+
+                console.log("Zoom Factor Increased to - "
+                    , mainWindow.webContents.zoomFactor * 100, "%");
+            }
+            if (zoomDirection === "out") {
+                mainWindow.webContents.zoomFactor = currentZoom - 0.01;
+
+                console.log("Zoom Factor Decreased to - "
+                    , mainWindow.webContents.zoomFactor * 100, "%");
+            }
+        });
     } catch (err) {
-        console.log("createWindow esception: ");
+        console.log("createWindow escxeption: ");
         console.log(err);
     }
 }
@@ -288,7 +330,7 @@ app.whenReady().then(async () => {
         });
 
     } catch (err) {
-        console.log("app.whenReady esception: ");
+        console.log("app.whenReady escxeption: ");
         console.log(err);
     }
 });
@@ -301,7 +343,7 @@ app.on('activate', function () {
     try {
         if (mainWindow === null) createWindow();
     } catch (err) {
-        console.log("activate esception: ");
+        console.log("activate escxeption: ");
         console.log(err);
     }
 });
@@ -310,7 +352,7 @@ app.on('will-quit', () => {
     try {
         globalShortcut.unregisterAll();
     } catch (err) {
-        console.log("will-quit esception: ");
+        console.log("will-quit escxeption: ");
         console.log(err);
     }
 });
