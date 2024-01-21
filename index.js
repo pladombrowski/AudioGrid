@@ -323,8 +323,11 @@ app.whenReady().then(async () => {
         createWindow();
         globalShortcut.register('F3', () => {
             if (mainWindow.isVisible()) {
+                //mainWindow.blur(); // Remove o foco da janela do Electron
                 mainWindow.hide();
+                //app.focus(); // Dá foco à aplicação ativa anterior
             } else {
+                //app.focus(); // Dá foco à aplicação ativa anterior
                 mainWindow.show();
             }
         });
