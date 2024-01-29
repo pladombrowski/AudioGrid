@@ -41,7 +41,7 @@
     const buttonArea = document.getElementById('button-area');
 
     // Fazer a requisição GET para obter a lista de nomes de áudio
-    fetch('http://localhost:3000/getAudioNames', { signal: AbortSignal.timeout(5000) })
+    fetch('http://localhost:3000/getAudioNames', { signal: AbortSignal.timeout(30000) })
     //fetch('http://localhost:3000/getAudioNames')
         .then(response => response.json())
         .then(data => {
@@ -76,8 +76,6 @@
                         }),
                     })
                         .then(response => response.json())
-                        .then(result => {
-                        })
                         .catch(error => {
                             console.error('Erro ao reproduzir áudio:', error);
                         });

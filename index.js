@@ -101,7 +101,7 @@ async function playAudio(name, res) {
             });
         }
     } catch (err) {
-        console.log("playAudio escxeption: ");
+        console.log("playAudio exception: ");
         console.log(err);
     }
 }
@@ -112,8 +112,8 @@ function getAudioNames(res) {
         console.log("audio folder: " + audioFolder);
         fs.readdir(audioFolder, async (err, files) => {
             if (err) {
-                console.error('Erro ao ler a pasta de áudios:', err);
-                return res.status(500).json({error: 'Erro ao obter nomes de áudio.'});
+                console.error('Error reading audios folder:', err);
+                return res.status(500).json({error: 'Error getting audio names.'});
             }
 
             const audioNames = files.filter(file => file.endsWith('.mp3') || file.endsWith('.ogg') || file.endsWith('.oga'));
@@ -131,7 +131,7 @@ function getAudioNames(res) {
         });
         console.log("after reading folder!");
     } catch (err) {
-        console.log("getAudioNames escxeption: ");
+        console.log("getAudioNames exception: ");
         console.log(err);
     }
 }
@@ -141,8 +141,8 @@ function serveRemotePage(req, res) {
 
     fs.readFile(indexPath, 'utf8', (err, data) => {
         if (err) {
-            console.error('Erro ao ler o arquivo index.html:', err);
-            res.status(500).send('Erro interno do servidor');
+            console.error('Error reading index.html:', err);
+            res.status(500).send('Intern server error');
         } else {
             const modifiedContent = data.replace(/localhost/g, localIP);
             res.send(modifiedContent);
@@ -161,7 +161,7 @@ function parseProperties(propertiesString) {
         });
         return properties;
     } catch (err) {
-        console.log("parseProperties escxeption: ");
+        console.log("parseProperties exception: ");
         console.log(err);
     }
 }
@@ -181,10 +181,10 @@ function startServer() {
             serveRemotePage(req, res);
         });
         expressApp.listen(port, () => {
-            console.log(`Servidor escutando em http://${localIP}:${port}`);
+            console.log(`Server running in http://${localIP}:${port}`);
         });
     } catch (err) {
-        console.log("startServer escxeption: ");
+        console.log("startServer exception: ");
         console.log(err);
     }
 }
@@ -306,7 +306,7 @@ function createWindow() {
             }
         });
     } catch (err) {
-        console.log("createWindow escxeption: ");
+        console.log("createWindow exception: ");
         console.log(err);
     }
 }
@@ -333,7 +333,7 @@ app.whenReady().then(async () => {
         });
 
     } catch (err) {
-        console.log("app.whenReady escxeption: ");
+        console.log("app.whenReady exception: ");
         console.log(err);
     }
 });
@@ -346,7 +346,7 @@ app.on('activate', function () {
     try {
         if (mainWindow === null) createWindow();
     } catch (err) {
-        console.log("activate escxeption: ");
+        console.log("activate exception: ");
         console.log(err);
     }
 });
@@ -355,7 +355,7 @@ app.on('will-quit', () => {
     try {
         globalShortcut.unregisterAll();
     } catch (err) {
-        console.log("will-quit escxeption: ");
+        console.log("will-quit exception: ");
         console.log(err);
     }
 });
