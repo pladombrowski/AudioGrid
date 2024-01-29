@@ -29,7 +29,7 @@ npm start
 Para compilar, o sistema deve ter instalado o electron-packager:
 
 ```bash
-  npm install
+   npm install electron-packager -g
 ```
 
 Windows
