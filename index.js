@@ -30,7 +30,7 @@ async function createVlc() {
     const ip = await internalIp.v4();
     const port = await getPort();
     if (!ip) {
-        throw new Error('Unable to get internal IP address');
+        throw new Error(i18nTexts.error_unable_to_get_internal_ip);
     }
     const address = `http://${ip}`;
     console.log(ip);
@@ -76,20 +76,20 @@ async function createVlc() {
 async function playAudio(name, res) {
     try {
         if (!name) {
-            return res.status(400).json({error: 'O parâmetro "name" é obrigatório.'});
+            return res.status(400).json({error: i18nTexts.error_mandatory_name_field});
         }
         console.log("Directory name: " + __dirname);
         const audioPath = path.join(__dirname, 'audios', name);
         console.log(audioPath);
         if (!fs.existsSync(audioPath)) {
-            return res.status(404).json({error: 'Arquivo de áudio não encontrado.'});
+            return res.status(404).json({error: i18nTexts.error_file_not_found});
         }
 
-        console.log('Stoping audio...');
+        console.log(i18nTexts.stopping_audio);
 
         try {
             vlc.command('pl_stop').then(() => {
-                console.log('Playing new audio...');
+                console.log(i18nTexts.playing_new_audio);
                 // Play audio
                 vlc.command('in_play', {
                     input: audioPath,
@@ -112,7 +112,7 @@ function getAudioNames(res) {
         console.log("audio folder: " + audioFolder);
         fs.readdir(audioFolder, async (err, files) => {
             if (err) {
-                console.error('Error reading audios folder:', err);
+                console.error(i18nTexts.error_reading_audios_folder, err);
                 return res.status(500).json({error: 'Error getting audio names.'});
             }
 
@@ -129,7 +129,7 @@ function getAudioNames(res) {
 
             res.status(200).json({audioFiles});
         });
-        console.log("after reading folder!");
+        console.log(i18nTexts.audios_folder_readed);
     } catch (err) {
         console.log("getAudioNames exception: ");
         console.log(err);
@@ -141,8 +141,8 @@ function serveRemotePage(req, res) {
 
     fs.readFile(indexPath, 'utf8', (err, data) => {
         if (err) {
-            console.error('Error reading index.html:', err);
-            res.status(500).send('Intern server error');
+            console.error(i18nTexts.error_reading_index, err);
+            res.status(500).send(i18nTexts.internal_server_error);
         } else {
             const modifiedContent = data.replace(/localhost/g, localIP);
             res.send(modifiedContent);
@@ -181,7 +181,7 @@ function startServer() {
             serveRemotePage(req, res);
         });
         expressApp.listen(port, () => {
-            console.log(`Server running in http://${localIP}:${port}`);
+            console.log(i18nTexts.server_running_in + localIP + ':' + port);
         });
     } catch (err) {
         console.log("startServer exception: ");
@@ -287,22 +287,13 @@ function createWindow() {
             .catch((err) => console.log(err));
 
         mainWindow.webContents.on("zoom-changed", (event, zoomDirection) => {
-            console.log(zoomDirection);
             const currentZoom = mainWindow.webContents.getZoomFactor();
-            console.log("Current Zoom Factor - ", currentZoom);
-            console.log("Current Zoom Level at - ", mainWindow.webContents.zoomLevel);
 
             if (zoomDirection === "in") {
                 mainWindow.webContents.zoomFactor = currentZoom + 0.01;
-
-                console.log("Zoom Factor Increased to - "
-                    , mainWindow.webContents.zoomFactor * 100, "%");
             }
             if (zoomDirection === "out") {
                 mainWindow.webContents.zoomFactor = currentZoom - 0.01;
-
-                console.log("Zoom Factor Decreased to - "
-                    , mainWindow.webContents.zoomFactor * 100, "%");
             }
         });
     } catch (err) {
