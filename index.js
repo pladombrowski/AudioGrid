@@ -720,10 +720,10 @@ function createWindow() {
                 const currentZoom = mainWindow.webContents.getZoomFactor();
 
                 if (zoomDirection === "in") {
-                    mainWindow.webContents.zoomFactor = Math.min(currentZoom + 0.1, 5);
+                    mainWindow.webContents.zoomFactor = Math.min(currentZoom + 0.01, 5);
                 }
                 if (zoomDirection === "out") {
-                    mainWindow.webContents.zoomFactor = Math.max(currentZoom - 0.1, 1);
+                    mainWindow.webContents.zoomFactor = Math.max(currentZoom - 0.01, 1);
                 }
             } catch (error) {
                 console.error('Erro ao alterar zoom:', error);
