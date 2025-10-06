@@ -25,7 +25,7 @@ class AudioGrid extends LitElement {
                     background-color: var(--primary-background-color);
                 }
             </style>
-            <iframe src="http://192.168.41.38:3000/remote"
+            <iframe src="http://localhost:3000/remote"
                     sandbox="allow-forms allow-popups allow-pointer-lock allow-same-origin allow-scripts"
                     allowfullscreen="true"
                     webkitallowfullscreen="true"

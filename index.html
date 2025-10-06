@@ -5,88 +5,349 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AudioGrid</title>
     <style>
+        body {
+            background-color: #000000;
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        #loading {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #ffffff;
+            font-size: 18px;
+            z-index: 1000;
+        }
+
+        #status {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: #ffffff;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 12px;
+            z-index: 1000;
+            display: none;
+        }
+
+
+
         /* CSS para botões */
         button {
-            background-color: #3498db; /* Cor de fundo padrão */
-            color: #ffffff; /* Cor do texto padrão */
-            padding: 0 0;
+            margin: 1px;
+            background-color: #3498db;
+            color: #ffffff;
+            padding: 0;
             border: none;
             cursor: pointer;
             font-weight: bold;
-            font-size: 14px;
+            font-size: 13px;
             overflow: hidden;
-            transition: background-color 0.1s, color 0.1s; /* Transição de cor de fundo e texto */
+            transition: all 0.3s ease;
             line-break: anywhere;
+            border-radius: 2px;
+            position: relative;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
         }
 
-        /* Efeito de hover */
         button:hover {
-            background-color: #2980b9 !important; /* Nova cor de fundo no hover */
-            color: #f2f2f2 !important; /* Nova cor do texto no hover */
+            background-color: #2980b9 !important;
+            color: #f2f2f2 !important;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+        }
+
+        button.playing {
+            background-color: #e74c3c !important;
+            animation: pulse 1s infinite;
+        }
+
+        button.loading {
+            background-color: #f39c12 !important;
+            cursor: not-allowed;
+        }
+
+        button.error {
+            background-color: #e74c3c !important;
+            animation: shake 0.5s ease-in-out;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        .error-message {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #e74c3c;
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            z-index: 1001;
+            display: none;
+        }
+
+        .success-message {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #27ae60;
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            z-index: 1001;
+            display: none;
         }
     </style>
 </head>
-<body style="background-color: #000000">
+<body>
+<div id="loading">Carregando áudios...</div>
+<div id="status"></div>
 <div id="button-area"></div>
+<div id="error-message" class="error-message"></div>
+<div id="success-message" class="success-message"></div>
 <script>
-
-    // a polyfill for it would be:
+    // Polyfill para AbortSignal.timeout
     AbortSignal.timeout ??= function timeout(ms) {
         const ctrl = new AbortController()
         setTimeout(() => ctrl.abort(), ms)
         return ctrl.signal
     }
 
-
     const buttonArea = document.getElementById('button-area');
+    const loadingDiv = document.getElementById('loading');
+    const statusDiv = document.getElementById('status');
+    const errorMessage = document.getElementById('error-message');
+    const successMessage = document.getElementById('success-message');
+    let currentPlayingButton = null;
 
-    // Fazer a requisição GET para obter a lista de nomes de áudio
-    fetch('http://localhost:3000/getAudioNames', { signal: AbortSignal.timeout(30000) })
-    //fetch('http://localhost:3000/getAudioNames')
-        .then(response => response.json())
-        .then(data => {
+    // Função para mostrar mensagens
+    function showMessage(message, type = 'error') {
+        const messageDiv = type === 'error' ? errorMessage : successMessage;
+        messageDiv.textContent = message;
+        messageDiv.style.display = 'block';
+        
+        setTimeout(() => {
+            messageDiv.style.display = 'none';
+        }, 3000);
+    }
 
-            // Criar botões com base nos dados de atalho
+    // Função para atualizar status
+    function updateStatus(message) {
+        statusDiv.textContent = message;
+        statusDiv.style.display = 'block';
+        
+        setTimeout(() => {
+            statusDiv.style.display = 'none';
+        }, 2000);
+    }
+
+    // Função para obter IP dinâmico
+    function getServerIP() {
+        return window.location.hostname || 'localhost';
+    }
+
+    // Função para reproduzir áudio
+    async function playAudio(audioFile, button) {
+        try {
+            // Remover estado de playing do botão anterior
+            if (currentPlayingButton) {
+                currentPlayingButton.classList.remove('playing');
+                clearTimeout(currentPlayingButton.stopTimeout);
+            }
+
+            // Adicionar estado de loading
+            button.classList.add('loading');
+            updateStatus('Carregando áudio...');
+
+            const response = await fetch(`http://${getServerIP()}:3000/playAudio`, {
+                signal: AbortSignal.timeout(10000),
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    name: audioFile.name,
+                }),
+            });
+
+            const result = await response.json();
+            
+            if (response.ok) {
+                // Sucesso
+                button.classList.remove('loading');
+                button.classList.add('playing');
+                currentPlayingButton = button;
+                
+                showMessage(`Reproduzindo: ${audioFile.name.replace(/\.[^/.]+$/, '')}`, 'success');
+                updateStatus('Áudio reproduzido com sucesso');
+                
+                // Calcular tempo para parar de piscar baseado na duração do áudio
+                const duration = audioFile.duration || 0;
+                const stopTime = Math.max(duration * 1000, 3000); // Mínimo 3 segundos
+                
+                // Parar de piscar após o tempo do áudio ou 10 segundos máximo
+                const maxTime = Math.min(stopTime, 10000);
+                button.stopTimeout = setTimeout(() => {
+                    button.classList.remove('playing');
+                    if (currentPlayingButton === button) {
+                        currentPlayingButton = null;
+                    }
+                }, maxTime);
+                
+            } else {
+                // Erro
+                button.classList.remove('loading');
+                button.classList.add('error');
+                showMessage(result.error || 'Erro ao reproduzir áudio');
+                
+                setTimeout(() => {
+                    button.classList.remove('error');
+                }, 2000);
+            }
+        } catch (error) {
+            console.error('Erro ao reproduzir áudio:', error);
+            button.classList.remove('loading');
+            button.classList.add('error');
+            
+            if (error.name === 'AbortError') {
+                showMessage('Timeout: Servidor não respondeu a tempo');
+            } else {
+                showMessage('Erro de conexão com o servidor');
+            }
+            
+            setTimeout(() => {
+                button.classList.remove('error');
+            }, 2000);
+        }
+    }
+
+    // Carregar áudios
+    async function loadAudios() {
+        try {
+            loadingDiv.style.display = 'block';
+            updateStatus('Conectando ao servidor...');
+
+            const response = await fetch(`http://${getServerIP()}:3000/getAudioNames`, { 
+                signal: AbortSignal.timeout(30000) 
+            });
+
+            if (!response.ok) {
+                throw new Error(`Erro HTTP: ${response.status}`);
+            }
+
+            const data = await response.json();
+            
+            if (!data.audioFiles || data.audioFiles.length === 0) {
+                showMessage('Nenhum arquivo de áudio encontrado');
+                loadingDiv.style.display = 'none';
+                return;
+            }
+
+            // Limpar área de botões
+            buttonArea.innerHTML = '';
+
+            // Criar botões
             data.audioFiles.forEach(audioFile => {
-
                 const color = audioFile.duration < 5 ? '#FF66B2' : '#3498db';
-
                 const button = document.createElement('button');
+                
                 button.textContent = audioFile.name.replace(/\.[^/.]+$/, '').substring(0, 22);
                 button.style.color = '#000000';
                 button.style.backgroundColor = color;
-                button.style.margin = '2px';
-                button.style.padding = '0px';
-                button.style.border = 'none';
-                button.style.cursor = 'pointer';
                 button.style.width = '170px';
                 button.style.height = '90px';
+                button.title = `Duração: ${Math.round(audioFile.duration)}s`;
 
-                // Adicionar um evento de clique ao botão
+                // Adicionar evento de clique
                 button.addEventListener('click', () => {
-                    // Fazer a requisição POST para reproduzir o áudio
-                    fetch('http://localhost:3000/playAudio', {
-                        signal: AbortSignal.timeout(5000),
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({
-                            name: audioFile.name,
-                        }),
-                    })
-                        .then(response => response.json())
-                        .catch(error => {
-                            console.error('Erro ao reproduzir áudio:', error);
-                        });
+                    // Se já está tocando este áudio, parar
+                    if (currentPlayingButton === button && button.classList.contains('playing')) {
+                        button.classList.remove('playing');
+                        if (button.stopTimeout) {
+                            clearTimeout(button.stopTimeout);
+                        }
+                        currentPlayingButton = null;
+                        updateStatus('Reprodução interrompida');
+                        return;
+                    }
+                    
+                    playAudio(audioFile, button);
                 });
 
                 buttonArea.appendChild(button);
             });
-        })
-        .catch(error => {
-            console.error('Erro ao obter nomes de áudio:', error);
-        });
+
+            loadingDiv.style.display = 'none';
+            showMessage(`${data.audioFiles.length} áudios carregados com sucesso`, 'success');
+            updateStatus('Pronto para reproduzir');
+
+        } catch (error) {
+            console.error('Erro ao carregar áudios:', error);
+            loadingDiv.style.display = 'none';
+            
+            if (error.name === 'AbortError') {
+                showMessage('Timeout: Servidor não respondeu a tempo');
+            } else {
+                showMessage('Erro ao carregar lista de áudios');
+            }
+        }
+    }
+
+    // Verificar status do servidor
+    async function checkServerStatus() {
+        try {
+            const response = await fetch(`http://${getServerIP()}:3000/status`, {
+                signal: AbortSignal.timeout(5000)
+            });
+            
+            if (response.ok) {
+                const status = await response.json();
+                updateStatus(`Servidor: ${status.status} | VLC: ${status.vlc ? 'Conectado' : 'Desconectado'}`);
+            }
+        } catch (error) {
+            console.warn('Erro ao verificar status do servidor:', error);
+        }
+    }
+
+    // Inicializar aplicação
+    document.addEventListener('DOMContentLoaded', () => {
+        checkServerStatus();
+        loadAudios();
+        
+        // Verificar status periodicamente
+        setInterval(checkServerStatus, 30000);
+    });
+
+    // Recarregar áudios com F5
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'F5') {
+            event.preventDefault();
+            loadAudios();
+        }
+    });
 </script>
 </body>
 </html>
