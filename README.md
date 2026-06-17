@@ -9,6 +9,7 @@ Aplicação simples em node + electron para ler arquivos mp3 de uma pasta e mont
 - **🎵 Mixagem de Áudio Integrada**: Mistura áudio do app com microfone automaticamente
 - **🖥️ Suporte a Múltiplos Monitores**: Troque o overlay para qualquer monitor
 - **🌐 Interface Web**: Acesse via navegador na rede local
+- **⌨️ Atalhos Customizados**: Configure atalhos globais (F1-F12) dinamicamente
 - **⚙️ Configuração Fácil**: Menu de contexto intuitivo
 - **🔧 API REST**: Controle completo via HTTP
 
@@ -155,6 +156,16 @@ Se você usar o Discord, configure a entrada de áudio para usar o Voicemeeter:
 1. Acesse `http://localhost:3000/remote` no navegador
 2. Use o AudioGrid de qualquer dispositivo na rede local
 3. Controle completo via interface web
+
+### ⌨️ Atalhos Customizados (Novo!)
+1. Clique com o botão direito na janela do AudioGrid
+2. Selecione **Configurar Atalho**
+3. Escolha o atalho desejado (F1-F12)
+4. A configuração é aplicada instantaneamente e persistida em `config.json`
+
+Você também pode verificar qual é o atalho ativo atual navegando em **Ajuda** → **Mostrar/Esconder: [ATALHO_ATUAL]** no menu de contexto.
+
+![img8.png](img8.png)
 
 ### API REST (Novo!)
 O AudioGrid inclui uma API REST completa para controle programático:
