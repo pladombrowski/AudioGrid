@@ -1,6 +1,7 @@
 {
-  "shortcut": "F3",
+  "shortcut": "Control+Alt+A",
   "shortcuts": {
-    "showHide": "F3"
-  }
+    "showHide": "Control+Alt+A"
+  },
+  "monitor": 2
 }

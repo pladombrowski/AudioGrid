@@ -1,17 +1,54 @@
 # AudioGrid
 
-Aplicação simples em node + electron para ler arquivos mp3 de uma pasta e montar um grid em janela e servidor WEB de botões para reproduzir os áudios.
+Aplicação simples em node + electron para ler arquivos mp3 de uma pasta e montar um grid em janela e servidor WEB de botões para reproduzir os áudios. Inclui sistema integrado de mixagem de áudio para uso com Discord, Google Meet e outras plataformas de comunicação.
 
 ![img.png](img.png)
 
+## ✨ Novas Funcionalidades
+
+- **🎵 Mixagem de Áudio Integrada**: Mistura áudio do app com microfone automaticamente
+- **🖥️ Suporte a Múltiplos Monitores**: Troque o overlay para qualquer monitor
+- **🌐 Interface Web**: Acesse via navegador na rede local
+- **⚙️ Configuração Fácil**: Menu de contexto intuitivo
+- **🔧 API REST**: Controle completo via HTTP
+
 ## 📋 Pré-requisitos
 
+### Windows
 - Windows 10/11
 - VLC Media Player
-- Voicemeeter (Banana ou Potato)
-- Discord (opcional, para uso com áudio)
+- VB-Cable (recomendado para mixagem de áudio)
+- Discord/Google Meet (opcional, para uso com áudio)
+
+### Linux
+- Ubuntu/Debian/Fedora/Arch (ou similar)
+- VLC Media Player
+- PulseAudio (geralmente pré-instalado)
+- Discord/Google Meet (opcional, para uso com áudio)
 
 ## 🚀 Instalação e Configuração
+
+### ⚡ Configuração Rápida (Recomendado)
+
+#### Linux
+```bash
+# Diagnóstico (se houver problemas)
+./diagnose-audio.sh
+
+# Correção automática (recomendado)
+./fix-audio-linux.sh
+
+# Configuração básica (alternativa)
+./setup-audio-linux.sh
+```
+
+#### Windows
+```powershell
+# Execute o script de configuração automática
+.\setup-audio-windows.ps1
+```
+
+### 📋 Instalação Manual
 
 ### Passo 1: Download do AudioGrid
 
@@ -92,53 +129,122 @@ Se você usar o Discord, configure a entrada de áudio para usar o Voicemeeter:
 
 ## 🎵 Como Usar
 
-1. Execute o `AudioGrid.exe`
+### Uso Básico
+1. Execute o `AudioGrid.exe` (Windows) ou `./AudioGrid` (Linux)
 2. A aplicação irá:
    - Escanear a pasta `audios` em busca de arquivos MP3
    - Criar um grid de botões para cada áudio encontrado
    - Iniciar um servidor web local na porta 3000
 
 3. Clique nos botões para reproduzir os áudios
-4. Os áudios serão reproduzidos através do VLC e roteados pelo Voicemeeter
+
+### Mixagem de Áudio (Novo!)
+1. Clique com botão direito na janela do AudioGrid
+2. Selecione "Mixagem de Áudio"
+3. Configure seus dispositivos de microfone e saída
+4. Inicie a mixagem
+5. No Discord/Meet, selecione o dispositivo virtual criado
+
+### Múltiplos Monitores (Novo!)
+1. Clique com botão direito na janela do AudioGrid
+2. Selecione "Trocar Monitor"
+3. Escolha o monitor desejado
+4. O overlay será movido automaticamente
+
+### Interface Web (Novo!)
+1. Acesse `http://localhost:3000/remote` no navegador
+2. Use o AudioGrid de qualquer dispositivo na rede local
+3. Controle completo via interface web
+
+### API REST (Novo!)
+O AudioGrid inclui uma API REST completa para controle programático:
+
+```bash
+# Status da mixagem de áudio
+curl http://localhost:3000/audio/status
+
+# Iniciar mixagem
+curl -X POST http://localhost:3000/audio/start-mixing
+
+# Parar mixagem
+curl -X POST http://localhost:3000/audio/stop-mixing
+
+# Ajustar volume do microfone
+curl -X POST http://localhost:3000/audio/set-volume \
+  -H "Content-Type: application/json" \
+  -d '{"type": "mic", "volume": 0.8}'
+
+# Reproduzir áudio
+curl -X POST http://localhost:3000/playAudio \
+  -H "Content-Type: application/json" \
+  -d '{"name": "meu_audio.mp3"}'
+
+# Alternar exibição do overlay (Mostrar/Esconder janela)
+curl http://localhost:3000/window/toggle
+```
+
+### ⌨️ Atalhos Globais no Linux (Wayland)
+
+No Linux (particularmente Ubuntu com Wayland), o Electron é impedido de registrar atalhos de teclado globais nativamente por questões de segurança do servidor de exibição. Para configurar um atalho global estável:
+1. Abra as **Configurações** do seu sistema.
+2. Navegue até **Teclado** → **Atalhos de Teclado** → **Atalhos personalizados**.
+3. Adicione um atalho personalizado:
+   - **Nome**: `AudioGrid Toggle`
+   - **Comando**: `curl http://localhost:3000/window/toggle`
+   - **Tecla**: Escolha a tecla desejada (ex: `F3` ou `Super+F3`).
+4. Clique em **Salvar**. Agora, pressionar essa tecla funcionará de forma robusta e imediata para exibir ou ocultar o overlay!
 
 ## 🔧 Solução de Problemas
 
-### VLC não encontrado
-- Verifique se o VLC está instalado e no PATH do sistema
-- Reinicie o computador após configurar as variáveis de ambiente
-- Teste executando `vlc` no prompt de comando
+### Linux - Problemas de Áudio
+```bash
+# Diagnóstico completo
+./diagnose-audio.sh
 
-### Áudio não sai no Voicemeeter
-- Verifique se o VLC está configurado para usar a saída correta
-- Confirme se o Voicemeeter está recebendo o áudio do VLC
-- Verifique os níveis de áudio no Voicemeeter
+# Correção automática
+./fix-audio-linux.sh
 
-### Discord não recebe áudio
-- Confirme se o Discord está configurado para usar "Voicemeeter Out B1"
-- Verifique se o Voicemeeter está enviando áudio para a saída B1
+# Verificar se AudioGrid Mix foi criado
+pactl list short sinks | grep audiogrid
+pactl list short sources | grep audiogrid
+```
+
+**Problemas Comuns:**
+- **PulseAudio não inicia**: Execute `systemctl --user restart pulseaudio`
+- **Sem dispositivos de áudio**: Execute `sudo usermod -a -G audio $USER` e reinicie
+- **AudioGrid Mix não aparece**: Execute `./fix-audio-linux.sh`
+- **Permissões negadas**: Verifique se está no grupo audio
+
+### Windows - Problemas de Áudio
+- **VB-Cable não funciona**: Reinstale o VB-Cable e reinicie o sistema
+- **Áudio não sai**: Verifique se o VB-Cable está configurado como dispositivo padrão
+- **Latência alta**: Ajuste as configurações de buffer no VB-Cable
+
+### Problemas Gerais
+- **VLC não encontrado**: Verifique se o VLC está instalado e no PATH do sistema
+- **Mixagem não inicia**: Verifique se há dispositivos de áudio disponíveis
+- **Volume muito baixo**: Ajuste os volumes no menu de configuração
+- **Eco/feedback**: Reduza o volume do microfone ou use fones de ouvido
 
 
 ## Código Fonte
 
-Para rodar, o sistema deve estar configurado com node e electron já.
+Para executar em modo de desenvolvimento (o Node.js e npm devem estar instalados):
 
 ```bash
 npm install
 npm start
 ```
 
-Para compilar, o sistema deve ter instalado o electron-packager:
+Para compilar e gerar os executáveis (empacotados sem loops recursivos):
 
+#### Linux (Ubuntu/Debian/Arch/Fedora)
 ```bash
-   npm install electron-packager -g
+npm run build-ubuntu
 ```
 
-Windows
+#### Windows
 ```bash
-electron-packager . AudioGrid --overwrite --platform=win32 --icon=AudioGrid.ico --prune=true --out=release-builds
+npm run build-windows
 ```
 
-Linux
-```bash
-electron-packager . AudioGrid --overwrite --platform=linux --icon=AudioGrid.ico --prune=true --out=release-builds
-```

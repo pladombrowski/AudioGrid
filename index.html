@@ -5,10 +5,159 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AudioGrid</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
+
+        :root {
+            --bg-color: #0b0c10;
+            --surface-color: rgba(255, 255, 255, 0.03);
+            --surface-hover: rgba(255, 255, 255, 0.08);
+            --border-color: rgba(255, 255, 255, 0.07);
+            --border-hover: rgba(255, 255, 255, 0.2);
+            --text-primary: #f5f6f9;
+            --text-secondary: #8b949e;
+            
+            --accent-short: #ff4785; /* Pink/Magenta glow for short audio */
+            --accent-long: #00f0ff;  /* Cyan glow for long audio */
+            --accent-playing: #ff3838; /* Red pulse for playing state */
+            
+            --scrollbar-thumb: rgba(255, 255, 255, 0.15);
+            --scrollbar-track: rgba(0, 0, 0, 0.2);
+        }
+
         body {
-            background-color: #000000;
+            background-color: var(--bg-color);
+            background-image: 
+                radial-gradient(at 10% 20%, rgba(26, 21, 44, 0.5) 0px, transparent 50%),
+                radial-gradient(at 90% 80%, rgba(12, 36, 43, 0.5) 0px, transparent 50%);
+            background-attachment: fixed;
             margin: 0;
-            font-family: Arial, sans-serif;
+            font-family: 'Outfit', sans-serif;
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        /* Custom Scrollbar - Standard CSS */
+        body {
+            scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+            scrollbar-width: thin;
+        }
+
+        /* Fallback for WebKit browsers */
+        @supports not (scrollbar-color: auto) {
+            ::-webkit-scrollbar {
+                width: 8px;
+                height: 8px;
+            }
+            ::-webkit-scrollbar-thumb {
+                background: var(--scrollbar-thumb);
+                border-radius: 4px;
+            }
+            ::-webkit-scrollbar-track {
+                background: var(--scrollbar-track);
+            }
+        }
+
+        header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(11, 12, 16, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border-color);
+            padding: 12px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .logo-text {
+            font-size: 20px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #ffffff 30%, #a5b4fc 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: 0.5px;
+        }
+
+        .logo-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: var(--accent-long);
+            box-shadow: 0 0 10px var(--accent-long);
+        }
+
+        .search-container {
+            flex-grow: 1;
+            max-width: 500px;
+            position: relative;
+        }
+
+        .search-input {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 8px 12px 8px 36px;
+            font-family: inherit;
+            font-size: 14px;
+            color: var(--text-primary);
+            box-sizing: border-box;
+            transition: all 0.25s ease;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: rgba(165, 180, 252, 0.4);
+            background: rgba(255, 255, 255, 0.08);
+            box-shadow: 0 0 0 3px rgba(165, 180, 252, 0.1);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+            pointer-events: none;
+            width: 14px;
+            height: 14px;
+        }
+
+        .status-badge {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 6px 12px;
+            font-size: 12px;
+            color: var(--text-secondary);
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background-color: var(--text-secondary);
+        }
+
+        .status-dot.online {
+            background-color: #2ec4b6;
+            box-shadow: 0 0 8px #2ec4b6;
         }
 
         #loading {
@@ -16,118 +165,270 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            color: #ffffff;
-            font-size: 18px;
+            color: var(--text-primary);
+            font-size: 16px;
+            font-weight: 500;
             z-index: 1000;
+            background: rgba(11, 12, 16, 0.8);
+            padding: 16px 28px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            gap: 12px;
         }
 
-        #status {
-            position: fixed;
-            top: 10px;
-            right: 10px;
-            background-color: rgba(0, 0, 0, 0.8);
-            color: #ffffff;
-            padding: 10px;
-            border-radius: 5px;
+        #loading::before {
+            content: "";
+            width: 16px;
+            height: 16px;
+            border: 2px solid var(--text-secondary);
+            border-top-color: var(--accent-long);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        #status-footer {
+            margin-top: auto;
+            background: rgba(11, 12, 16, 0.9);
+            border-top: 1px solid var(--border-color);
+            padding: 10px 24px;
             font-size: 12px;
-            z-index: 1000;
-            display: none;
+            color: var(--text-secondary);
+            text-align: center;
+            z-index: 10;
         }
 
+        .container {
+            padding: 24px;
+            box-sizing: border-box;
+        }
 
+        #button-area {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+            gap: 5px;
+        }
 
-        /* CSS para botões */
-        button {
-            margin: 1px;
-            background-color: #3498db;
-            color: #ffffff;
-            padding: 0;
-            border: none;
+        /* Estilos do Botão/Card */
+        button.audio-card {
+            background: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            color: var(--text-primary);
+            padding: 10px;
+            min-height: 84px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: flex-start;
             cursor: pointer;
-            font-weight: bold;
-            font-size: 13px;
-            overflow: hidden;
-            transition: all 0.3s ease;
-            line-break: anywhere;
-            border-radius: 2px;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            font-family: inherit;
+            text-align: left;
+            outline: none;
         }
 
-        button:hover {
-            background-color: #2980b9 !important;
-            color: #f2f2f2 !important;
+        button.audio-card::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            transition: all 0.25s ease;
+        }
+
+        /* Neon indicators based on audio duration */
+        button.audio-card.short-duration::before {
+            background-color: var(--accent-short);
+        }
+        button.audio-card.long-duration::before {
+            background-color: var(--accent-long);
+        }
+
+        button.audio-card:hover {
+            background: var(--surface-hover);
+            border-color: var(--border-hover);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+        }
+
+        button.audio-card.short-duration:hover {
+            box-shadow: 0 6px 14px rgba(255, 71, 133, 0.15);
+        }
+
+        button.audio-card.long-duration:hover {
+            box-shadow: 0 6px 14px rgba(0, 240, 255, 0.15);
+        }
+
+        button.audio-card:active {
             transform: translateY(-1px);
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
         }
 
-        button:active {
-            transform: translateY(0);
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+        .card-title {
+            font-size: 18px;
+            font-weight: 500;
+            line-height: 1.35;
+            word-break: break-word;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            width: 100%;
+            margin-bottom: 6px;
         }
 
-        button.playing {
-            background-color: #e74c3c !important;
-            animation: pulse 1s infinite;
+        .card-duration {
+            font-size: 11px;
+            color: var(--text-secondary);
+            font-weight: 400;
+            background: rgba(255, 255, 255, 0.03);
+            padding: 2px 6px;
+            border-radius: 4px;
+            border: 1px solid rgba(255, 255, 255, 0.04);
         }
 
-        button.loading {
-            background-color: #f39c12 !important;
+        /* Estados Especiais */
+        button.audio-card.loading {
             cursor: not-allowed;
+            opacity: 0.7;
+        }
+        
+        button.audio-card.loading::after {
+            content: "";
+            position: absolute;
+            right: 12px;
+            bottom: 12px;
+            width: 12px;
+            height: 12px;
+            border: 2px solid var(--text-secondary);
+            border-top-color: var(--text-primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
         }
 
-        button.error {
-            background-color: #e74c3c !important;
-            animation: shake 0.5s ease-in-out;
+        button.audio-card.playing {
+            background: rgba(255, 56, 56, 0.05);
+            border-color: var(--accent-playing);
+            box-shadow: 0 0 15px rgba(255, 56, 56, 0.25) !important;
+            animation: pulse-border 1.5s infinite alternate;
         }
 
-        @keyframes pulse {
-            0% { opacity: 1; }
-            50% { opacity: 0.7; }
-            100% { opacity: 1; }
+        button.audio-card.playing::before {
+            background-color: var(--accent-playing);
+        }
+
+        @keyframes pulse-border {
+            0% { border-color: rgba(255, 56, 56, 0.6); }
+            100% { border-color: rgba(255, 56, 56, 1); }
+        }
+
+        button.audio-card.error {
+            border-color: var(--accent-playing);
+            animation: shake 0.4s ease-in-out;
         }
 
         @keyframes shake {
             0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-5px); }
-            75% { transform: translateX(5px); }
+            25% { transform: translateX(-4px); }
+            75% { transform: translateX(4px); }
         }
 
-        .error-message {
+        /* Mensagens Flutuantes */
+        .toast {
             position: fixed;
-            top: 50%;
+            bottom: 60px;
             left: 50%;
-            transform: translate(-50%, -50%);
-            background-color: #e74c3c;
-            color: white;
-            padding: 20px;
+            transform: translateX(-50%) translateY(20px);
+            background: rgba(20, 21, 26, 0.95);
+            border: 1px solid var(--border-color);
             border-radius: 8px;
-            text-align: center;
-            z-index: 1001;
-            display: none;
+            padding: 10px 20px;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-primary);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            pointer-events: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
-        .success-message {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background-color: #27ae60;
-            color: white;
-            padding: 20px;
-            border-radius: 8px;
-            text-align: center;
-            z-index: 1001;
-            display: none;
+        .toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .toast.toast-error {
+            border-color: rgba(255, 56, 56, 0.4);
+            background: rgba(30, 15, 15, 0.95);
+        }
+        
+        .toast.toast-success {
+            border-color: rgba(46, 196, 182, 0.4);
+            background: rgba(10, 25, 20, 0.95);
         }
     </style>
 </head>
 <body>
-<div id="loading">Carregando áudios...</div>
-<div id="status"></div>
-<div id="button-area"></div>
-<div id="error-message" class="error-message"></div>
-<div id="success-message" class="success-message"></div>
+<header>
+    <div class="logo-section">
+        <div class="logo-dot"></div>
+        <div class="logo-text">AudioGrid</div>
+    </div>
+    
+    <div class="search-container">
+        <!-- SVG Lupa -->
+        <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        </svg>
+        <input type="text" id="search-bar" class="search-input" placeholder="Pesquisar áudios...">
+    </div>
+    
+    <div class="status-badge">
+        <div id="status-dot" class="status-dot"></div>
+        <span id="status-text">Conectando...</span>
+    </div>
+</header>
+
+<div id="loading">Carregando catálogo de áudios...</div>
+
+<div class="container">
+    <div id="button-area"></div>
+</div>
+
+<div id="toast-message" class="toast"></div>
+<div id="status-footer">Carregando informações do servidor...</div>
+
+<!-- Modal de Atalho (Glassmorphism) -->
+<div id="shortcut-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); z-index: 1000; align-items: center; justify-content: center;">
+    <div style="background: rgba(15, 16, 22, 0.98); border: 1px solid var(--border-color); border-radius: 16px; padding: 32px; max-width: 400px; width: 90%; text-align: center; box-shadow: 0 20px 45px rgba(0, 0, 0, 0.6); display: flex; flex-direction: column; align-items: center;">
+        <h3 style="margin-top: 0; margin-bottom: 12px; font-size: 20px; font-weight: 600; color: var(--text-primary);">Configurar Atalho</h3>
+        <p style="color: var(--text-secondary); font-size: 14px; margin-top: 0; margin-bottom: 24px; line-height: 1.5;">Pressione a combinação de teclas desejada.<br><small style="color: var(--text-secondary); opacity: 0.8; font-size: 11px;">Exemplo: Ctrl+Alt+A ou Super+F3</small></p>
+        
+        <div id="shortcut-display" style="background: rgba(255, 255, 255, 0.03); border: 2px dashed rgba(255, 255, 255, 0.1); border-radius: 8px; padding: 20px; font-size: 22px; font-weight: 700; color: var(--accent-long); margin-bottom: 24px; min-width: 250px; min-height: 32px; display: flex; align-items: center; justify-content: center; text-transform: uppercase; letter-spacing: 0.5px;">
+            Pressione as teclas...
+        </div>
+        
+        <div style="display: flex; gap: 12px; justify-content: center; width: 100%;">
+            <button id="btn-save-shortcut" style="background: var(--accent-long); color: #0b0c10; border: none; border-radius: 8px; padding: 10px 24px; font-weight: 600; font-family: inherit; font-size: 14px; cursor: pointer; display: none; transition: all 0.2s ease;">Salvar</button>
+            <button id="btn-cancel-shortcut" style="background: rgba(255, 255, 255, 0.03); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 8px; padding: 10px 24px; font-weight: 500; font-family: inherit; font-size: 14px; cursor: pointer; transition: all 0.2s ease;">Cancelar</button>
+        </div>
+    </div>
+</div>
+
 <script>
     // Polyfill para AbortSignal.timeout
     AbortSignal.timeout ??= function timeout(ms) {
@@ -138,51 +439,47 @@
 
     const buttonArea = document.getElementById('button-area');
     const loadingDiv = document.getElementById('loading');
-    const statusDiv = document.getElementById('status');
-    const errorMessage = document.getElementById('error-message');
-    const successMessage = document.getElementById('success-message');
+    const statusText = document.getElementById('status-text');
+    const statusDot = document.getElementById('status-dot');
+    const toastMessage = document.getElementById('toast-message');
+    const statusFooter = document.getElementById('status-footer');
+    const searchBar = document.getElementById('search-bar');
     let currentPlayingButton = null;
+    let toastTimeout = null;
 
-    // Função para mostrar mensagens
+    // Mostrar mensagem flutuante (toast)
     function showMessage(message, type = 'error') {
-        const messageDiv = type === 'error' ? errorMessage : successMessage;
-        messageDiv.textContent = message;
-        messageDiv.style.display = 'block';
+        clearTimeout(toastTimeout);
+        toastMessage.textContent = message;
+        toastMessage.className = `toast toast-${type} show`;
         
-        setTimeout(() => {
-            messageDiv.style.display = 'none';
+        toastTimeout = setTimeout(() => {
+            toastMessage.classList.remove('show');
         }, 3000);
     }
 
-    // Função para atualizar status
-    function updateStatus(message) {
-        statusDiv.textContent = message;
-        statusDiv.style.display = 'block';
-        
-        setTimeout(() => {
-            statusDiv.style.display = 'none';
-        }, 2000);
-    }
-
-    // Função para obter IP dinâmico
+    // Obter IP dinâmico
     function getServerIP() {
         return window.location.hostname || 'localhost';
     }
 
-    // Função para reproduzir áudio
+    // Porta do servidor
+    function getServerPort() {
+        return (typeof window.AUDIOGRID_PORT !== 'undefined' && window.AUDIOGRID_PORT != null)
+            ? window.AUDIOGRID_PORT : 3000;
+    }
+
+    // Reproduzir áudio
     async function playAudio(audioFile, button) {
         try {
-            // Remover estado de playing do botão anterior
             if (currentPlayingButton) {
                 currentPlayingButton.classList.remove('playing');
                 clearTimeout(currentPlayingButton.stopTimeout);
             }
 
-            // Adicionar estado de loading
             button.classList.add('loading');
-            updateStatus('Carregando áudio...');
 
-            const response = await fetch(`http://${getServerIP()}:3000/playAudio`, {
+            const response = await fetch(`http://${getServerIP()}:${getServerPort()}/playAudio`, {
                 signal: AbortSignal.timeout(10000),
                 method: 'POST',
                 headers: {
@@ -194,22 +491,18 @@
             });
 
             const result = await response.json();
+            button.classList.remove('loading');
             
             if (response.ok) {
-                // Sucesso
-                button.classList.remove('loading');
                 button.classList.add('playing');
                 currentPlayingButton = button;
                 
                 showMessage(`Reproduzindo: ${audioFile.name.replace(/\.[^/.]+$/, '')}`, 'success');
-                updateStatus('Áudio reproduzido com sucesso');
                 
-                // Calcular tempo para parar de piscar baseado na duração do áudio
                 const duration = audioFile.duration || 0;
-                const stopTime = Math.max(duration * 1000, 3000); // Mínimo 3 segundos
+                const stopTime = Math.max(duration * 1000, 3000);
+                const maxTime = Math.min(stopTime, 15000); // tempo limite máximo do feedback visual
                 
-                // Parar de piscar após o tempo do áudio ou 10 segundos máximo
-                const maxTime = Math.min(stopTime, 10000);
                 button.stopTimeout = setTimeout(() => {
                     button.classList.remove('playing');
                     if (currentPlayingButton === button) {
@@ -218,14 +511,9 @@
                 }, maxTime);
                 
             } else {
-                // Erro
-                button.classList.remove('loading');
                 button.classList.add('error');
                 showMessage(result.error || 'Erro ao reproduzir áudio');
-                
-                setTimeout(() => {
-                    button.classList.remove('error');
-                }, 2000);
+                setTimeout(() => button.classList.remove('error'), 1000);
             }
         } catch (error) {
             console.error('Erro ao reproduzir áudio:', error);
@@ -238,19 +526,15 @@
                 showMessage('Erro de conexão com o servidor');
             }
             
-            setTimeout(() => {
-                button.classList.remove('error');
-            }, 2000);
+            setTimeout(() => button.classList.remove('error'), 1000);
         }
     }
 
-    // Carregar áudios
+    // Carregar catálogo de áudios
     async function loadAudios() {
         try {
-            loadingDiv.style.display = 'block';
-            updateStatus('Conectando ao servidor...');
-
-            const response = await fetch(`http://${getServerIP()}:3000/getAudioNames`, { 
+            loadingDiv.style.display = 'flex';
+            const response = await fetch(`http://${getServerIP()}:${getServerPort()}/getAudioNames`, { 
                 signal: AbortSignal.timeout(30000) 
             });
 
@@ -259,95 +543,251 @@
             }
 
             const data = await response.json();
+            loadingDiv.style.display = 'none';
             
             if (!data.audioFiles || data.audioFiles.length === 0) {
                 showMessage('Nenhum arquivo de áudio encontrado');
-                loadingDiv.style.display = 'none';
+                buttonArea.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: var(--text-secondary); margin-top: 40px;">Nenhum arquivo de áudio encontrado na pasta "audios"</div>';
                 return;
             }
 
-            // Limpar área de botões
             buttonArea.innerHTML = '';
 
-            // Criar botões
             data.audioFiles.forEach(audioFile => {
-                const color = audioFile.duration < 5 ? '#FF66B2' : '#3498db';
                 const button = document.createElement('button');
+                const cleanName = audioFile.name.replace(/\.[^/.]+$/, '');
                 
-                button.textContent = audioFile.name.replace(/\.[^/.]+$/, '').substring(0, 22);
-                button.style.color = '#000000';
-                button.style.backgroundColor = color;
-                button.style.width = '170px';
-                button.style.height = '90px';
-                button.title = `Duração: ${Math.round(audioFile.duration)}s`;
+                button.className = 'audio-card';
+                button.setAttribute('data-name', cleanName);
+                
+                // Aplicar classe de acordo com a duração
+                if (audioFile.duration < 5) {
+                    button.classList.add('short-duration');
+                } else {
+                    button.classList.add('long-duration');
+                }
+                
+                // Elemento do Título
+                const titleSpan = document.createElement('span');
+                titleSpan.className = 'card-title';
+                titleSpan.textContent = cleanName;
+                button.appendChild(titleSpan);
+                
+                // Elemento da Duração
+                const durationSpan = document.createElement('span');
+                durationSpan.className = 'card-duration';
+                durationSpan.textContent = audioFile.duration > 0 ? `${Math.round(audioFile.duration)}s` : '--';
+                button.appendChild(durationSpan);
 
-                // Adicionar evento de clique
                 button.addEventListener('click', () => {
-                    // Se já está tocando este áudio, parar
                     if (currentPlayingButton === button && button.classList.contains('playing')) {
                         button.classList.remove('playing');
-                        if (button.stopTimeout) {
-                            clearTimeout(button.stopTimeout);
-                        }
+                        if (button.stopTimeout) clearTimeout(button.stopTimeout);
                         currentPlayingButton = null;
-                        updateStatus('Reprodução interrompida');
                         return;
                     }
-                    
                     playAudio(audioFile, button);
                 });
 
                 buttonArea.appendChild(button);
             });
 
-            loadingDiv.style.display = 'none';
-            showMessage(`${data.audioFiles.length} áudios carregados com sucesso`, 'success');
-            updateStatus('Pronto para reproduzir');
+            // Aplicar o filtro de pesquisa atual
+            filterAudios();
 
         } catch (error) {
             console.error('Erro ao carregar áudios:', error);
             loadingDiv.style.display = 'none';
-            
-            if (error.name === 'AbortError') {
-                showMessage('Timeout: Servidor não respondeu a tempo');
-            } else {
-                showMessage('Erro ao carregar lista de áudios');
-            }
+            showMessage('Erro ao carregar lista de áudios');
         }
     }
+
+    // Filtrar áudios na tela
+    function filterAudios() {
+        const query = searchBar.value.toLowerCase().trim();
+        const cards = buttonArea.querySelectorAll('.audio-card');
+        let visibleCount = 0;
+        
+        cards.forEach(card => {
+            const name = card.getAttribute('data-name').toLowerCase();
+            if (name.includes(query)) {
+                card.style.display = '';
+                visibleCount++;
+            } else {
+                card.style.display = 'none';
+            }
+        });
+        
+        // Atualizar footer com número de itens visíveis
+        const total = cards.length;
+        if (query) {
+            statusFooter.textContent = `${visibleCount} de ${total} áudios encontrados para "${query}"`;
+        } else {
+            statusFooter.textContent = `Total de áudios carregados: ${total} | Servidor: http://${getServerIP()}:${getServerPort()}`;
+        }
+    }
+
+    // Registrar evento de pesquisa
+    searchBar.addEventListener('input', filterAudios);
 
     // Verificar status do servidor
     async function checkServerStatus() {
         try {
-            const response = await fetch(`http://${getServerIP()}:3000/status`, {
+            const response = await fetch(`http://${getServerIP()}:${getServerPort()}/status`, {
                 signal: AbortSignal.timeout(5000)
             });
             
             if (response.ok) {
                 const status = await response.json();
-                updateStatus(`Servidor: ${status.status} | VLC: ${status.vlc ? 'Conectado' : 'Desconectado'}`);
+                statusText.textContent = status.vlc ? 'VLC Conectado' : 'Sem VLC';
+                statusDot.className = 'status-dot online';
+                
+                if (!status.vlc) {
+                    statusText.textContent = 'Sem VLC';
+                    statusDot.className = 'status-dot';
+                    statusDot.style.backgroundColor = '#f39c12';
+                }
+            } else {
+                throw new Error();
             }
         } catch (error) {
-            console.warn('Erro ao verificar status do servidor:', error);
+            statusText.textContent = 'Offline';
+            statusDot.className = 'status-dot';
+            statusDot.style.backgroundColor = '#ff3838';
         }
     }
 
-    // Inicializar aplicação
-    document.addEventListener('DOMContentLoaded', () => {
+    function initApp() {
         checkServerStatus();
         loadAudios();
-        
-        // Verificar status periodicamente
-        setInterval(checkServerStatus, 30000);
-    });
+        setInterval(checkServerStatus, 15000);
+    }
 
-    // Recarregar áudios com F5
+    // Inicializar aplicação após receber a porta do servidor
+    (function waitForServerPort() {
+        if (typeof window.electronAPI !== 'undefined' && window.electronAPI.onServerPort) {
+            window.electronAPI.onServerPort((port) => {
+                window.AUDIOGRID_PORT = port;
+                if (document.readyState === 'loading') {
+                    document.addEventListener('DOMContentLoaded', initApp);
+                } else {
+                    initApp();
+                }
+            });
+        } else {
+            // Em navegadores comuns (acesso remoto)
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', initApp);
+            } else {
+                initApp();
+            }
+        }
+    })();
+
+    // Atalhos do teclado (F5 para recarregar)
     document.addEventListener('keydown', (event) => {
         if (event.key === 'F5') {
             event.preventDefault();
             loadAudios();
         }
     });
+
+    // --- Modal de Configuração de Atalho ---
+    let currentShortcutStr = '';
+    const shortcutModal = document.getElementById('shortcut-modal');
+    const shortcutDisplay = document.getElementById('shortcut-display');
+    const btnSaveShortcut = document.getElementById('btn-save-shortcut');
+    const btnCancelShortcut = document.getElementById('btn-cancel-shortcut');
+
+    function openShortcutModal() {
+        currentShortcutStr = '';
+        shortcutDisplay.textContent = 'Pressione as teclas...';
+        btnSaveShortcut.style.display = 'none';
+        shortcutModal.style.display = 'flex';
+        
+        window.addEventListener('keydown', handleShortcutKeyDown);
+    }
+
+    function closeShortcutModal() {
+        shortcutModal.style.display = 'none';
+        window.removeEventListener('keydown', handleShortcutKeyDown);
+    }
+
+    function handleShortcutKeyDown(e) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const modifiers = [];
+        if (e.ctrlKey) modifiers.push('Control');
+        if (e.altKey) modifiers.push('Alt');
+        if (e.shiftKey) modifiers.push('Shift');
+        if (e.metaKey) modifiers.push('Super'); // Meta key (Windows/Command key)
+
+        let key = e.key;
+        
+        // Ignorar se a tecla pressionada for apenas um modificador solto
+        if (key === 'Control' || key === 'Alt' || key === 'Shift' || key === 'Meta') {
+            key = '';
+        }
+
+        if (key === ' ') key = 'Space';
+        
+        // Capitalizar letra única
+        if (key && key.length === 1) {
+            key = key.toUpperCase();
+        }
+
+        const parts = [...modifiers];
+        if (key) {
+            parts.push(key);
+        }
+
+        if (parts.length > 0) {
+            currentShortcutStr = parts.join('+');
+            shortcutDisplay.textContent = currentShortcutStr;
+            
+            // Permitir salvar se for uma tecla de função (F1-F12) ou se tiver um modificador + qualquer tecla
+            const hasModifier = modifiers.length > 0;
+            const isFunctionKey = /^F[1-9][0-9]?$/.test(key);
+            
+            if ((hasModifier && key) || isFunctionKey) {
+                btnSaveShortcut.style.display = 'block';
+            } else {
+                btnSaveShortcut.style.display = 'none';
+            }
+        }
+    }
+
+    btnCancelShortcut.addEventListener('click', closeShortcutModal);
+    btnSaveShortcut.addEventListener('click', () => {
+        if (currentShortcutStr) {
+            if (typeof window.electronAPI !== 'undefined' && window.electronAPI.saveShortcut) {
+                window.electronAPI.saveShortcut(currentShortcutStr);
+            } else {
+                showMessage('API do Electron não disponível para salvar atalho');
+                closeShortcutModal();
+            }
+        }
+    });
+
+    // Registrar receptores de IPC exposados no preload.js
+    if (typeof window.electronAPI !== 'undefined') {
+        if (window.electronAPI.onOpenShortcutModal) {
+            window.electronAPI.onOpenShortcutModal(() => {
+                openShortcutModal();
+            });
+        }
+        if (window.electronAPI.onShortcutRegistered) {
+            window.electronAPI.onShortcutRegistered((status, message) => {
+                closeShortcutModal();
+                if (status === 'success') {
+                    showMessage(`Atalho alterado para "${message}" com sucesso!`, 'success');
+                } else {
+                    showMessage(message, 'error');
+                }
+            });
+        }
+    }
 </script>
 </body>
 </html>

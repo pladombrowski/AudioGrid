@@ -1,5 +1,8 @@
 /.idea/
 /release-builds/
+/release-build-ubuntu/
+/release-build-windows/
 /AudioGrid.iml
 /package-lock.json
 /node_modules/
+/audios/
